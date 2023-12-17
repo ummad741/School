@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
+import os
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -25,7 +27,7 @@ SECRET_KEY = 'django-insecure-=(#b1#b8&!1=82_9wwm_c^ynidn0+r!x=#1q)o5#@rmiz-i9@)
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -76,10 +78,23 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
+
 DATABASES = {
+    # pip install psycopg2
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+
+        'NAME': os.environ.get('PG_DB', 'postgres'),
+
+        'USER': os.environ.get('PG_USER', 'postgres'),
+
+        'PASSWORD': os.environ.get('PG_PASSWORD', 'postgres'),
+
+        'HOST': os.environ.get('PG_HOST', 'localhost'),
+
+        'PORT': os.environ.get('PG_PORT', '5432'),
+
     }
 }
 
@@ -119,6 +134,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field

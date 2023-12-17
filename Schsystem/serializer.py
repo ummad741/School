@@ -14,11 +14,6 @@ class CreateAdminSrl(serializers.ModelSerializer):
         model = Admin
         fields = "__all__"
 
-# class Admin_dash(serializers.ModelSerializer):
-
-
-#! ADMIN END
-
 
 #! FOR STUNDETS SERIALIZERS START
 class LoginStuSrl(serializers.ModelSerializer):
@@ -37,14 +32,6 @@ class CreateStuSrl(serializers.ModelSerializer):
     class Meta:
         model = Students
         fields = "__all__"
-
-
-# class StudentsAgeSrl(serializers.ModelSerializer):
-#     class Meta:
-#         model = Students
-#         fields = ("stu_age", )
-
-#! STUDENT END
 
 
 #! FOR TEACHER SERIALIZERS START
@@ -67,9 +54,6 @@ class ForteachersGroup(serializers.Serializer):
     group_count = serializers.CharField()
 
 
-#! TEACHERS END
-
-
 #! FOR GROUP SERIALIZERS START
 class CreateGroupSrl(serializers.ModelSerializer):
     class Meta:
@@ -83,4 +67,24 @@ class GroupIs_HaveSrl(serializers.ModelSerializer):
         fields = ('group_name', 'group_time', 'group_category',
                   'group_age', 'group_teachers')
 
-#! GROUP END
+
+##!For Homework serializers ###
+
+class ShowHomework(serializers.ModelSerializer):
+    class Meta:
+        model = Homework
+        fields = '__all__'
+
+
+##!For Exam serializers ###
+
+class CreateExam(serializers.Serializer):
+    class Meta:
+        model = Exam
+        fields = "__all__"
+
+
+class ShowExam(serializers.ModelSerializer):
+    class Meta:
+        model = ThemeExam
+        fields = "__all__"

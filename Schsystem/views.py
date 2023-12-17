@@ -5,15 +5,15 @@ from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.response import Response
 from drf_yasg.utils import swagger_auto_schema
+from datetime import *
 # LOCAL IMPORTING
 from .serializer import *
 from .models import *
 
-# views here.
+# views here
+
 
 ##! FOR ADMIN VIEWS START ##!
-
-
 class AdminLoginView(APIView):
     queryset = Admin.objects.all()
     serializer = LoginAdminSrl()
@@ -104,8 +104,6 @@ class CreateGroupView(APIView):
 class Admin_Searching_Students(APIView):
     queryset = Students.objects.all()
     queryset2 = Group.objects.all()
-    request_srl = SearchStuSrl()
-    data_srl = CreateStuSrl()
 
     ### SEARCHING STUDENT FROM ADMIN ###
     @swagger_auto_schema(request_body=SearchStuSrl)
@@ -137,11 +135,7 @@ class Admin_Searching_Students(APIView):
             return Response({"Students": srl_data_srl.data, "Group": srl_group_srl.data})
 
 
-##! ADMIN END ###
-
-
-##! FOR STUNDETS VIEWS START ##!
-
+##! FOR STUNDETS VIEWS START ###
 class StudetnsLoginView(APIView):
     queryset = Students.objects.all()
     serializer = LoginStuSrl()
@@ -165,7 +159,7 @@ class CreateStudentsView(APIView):
     serializer = CreateStuSrl()
     parser_classes = [MultiPartParser, ]
 
-    @swagger_auto_schema(request_body=CreateStuSrl,)
+    @swagger_auto_schema(request_body=CreateStuSrl)
     def post(self, request):
         re_age = int(request.data.get("stu_age"))
         ### VALIDATION ###
@@ -175,12 +169,17 @@ class CreateStudentsView(APIView):
             if not re_phone:
                 return Response({"MSG": "Phone cannot be null"}, status=status.HTTP_400_BAD_REQUEST)
 
+            stu_id = request.data.get("stu_id")
+            if len(stu_id) != 6:
+                return Response({"MSG": "Password should be 6 characters long"}, status=status.HTTP_400_BAD_REQUEST)
+
             re_pass = request.data.get("stu_pass")
             if len(re_pass) != 8:
                 return Response({"MSG": "Password should be 8 characters long"}, status=status.HTTP_400_BAD_REQUEST)
             ### CREATE STUDENTS ###
             stu_srl = CreateStuSrl(data=request.data)
             if stu_srl.is_valid():
+                stu_srl.save()
                 return Response({"MSG": "Successfully"}, status=status.HTTP_200_OK)
             else:
                 return Response(stu_srl.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -188,11 +187,7 @@ class CreateStudentsView(APIView):
             return Response({"MSG": "Age should be between 10 and 16"}, status=status.HTTP_400_BAD_REQUEST)
 
 
-##! STUDENTS END ###
-
-
 ##! FOR TEACHERS VIEWS START ###
-
 class TeacherLoginView(APIView):
     queryset = Teachers.objects.all()
     serializer = LoginTeachSrl()
@@ -213,7 +208,7 @@ class TeacherLoginView(APIView):
 
 
 class CreateTeacherView(APIView):
-    queryset = Teachers
+    queryset = Teachers.objects.all()
     serializer = CreateTeachSrl()
 
     parser_classes = [MultiPartParser,]
@@ -234,4 +229,88 @@ class CreateTeacherView(APIView):
         else:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-##! TEACHER END ###
+
+##! HOMEWORK VIEWS ###
+class CreateHomework(APIView):
+    queryset = Homework.objects.all()
+    serializer = ShowHomework()
+    parser_classes = [MultiPartParser,]
+
+    @swagger_auto_schema(request_body=ShowHomework)
+    def post(self, request):
+        serializer = ShowHomework(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"Succsesfuly": serializer.data})
+        else:
+            return Response(serializer.errors)
+
+
+class HomeworkChange(APIView):
+    queryset = Homework.objects.all()
+    parser_classes = [MultiPartParser,]
+
+    @swagger_auto_schema(request_body=ShowHomework)
+    def patch(self, request, title):
+        homework = Homework.objects.filter(title=title).first()
+        if homework:
+            time = datetime.now()
+            time = time.date()
+            deadline = homework.date_line
+            if time <= deadline:
+                serializer = ShowHomework(data=request.data, partial=True)
+                if serializer.is_valid():
+                    serializer.save()
+                    return Response(serializer.data, "succsessfuly")
+                else:
+                    return Response(serializer.errors)
+            else:
+                return Response({"MSG": "Diedline otib ketgan!"})
+        else:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+class HomeworkView(APIView):
+    queryset1 = Group.objects.all()
+    queryset1 = Homework.objects.all()
+    serializer = ShowHomework()
+
+    def get(self, request, pk):
+        stu_in_group = Group.objects.filter(group_students=pk).first()
+        homework = Homework.objects.filter(group=stu_in_group)
+        if homework.exists():
+            serializer = ShowHomework(homework, many=True)
+            return Response(serializer.data)
+        else:
+            return Response({"Error": "bunday student yo'q!"})
+
+
+##!EXAM VIEWS ###
+
+class CreateExam(APIView):
+    queryset = Exam.objects.all()
+    serializer = CreateExam()
+    parser_classes = [MultiPartParser,]
+
+    @swagger_auto_schema(request_body=CreateExam)
+    def post(self, request):
+        serializer = CreateExam(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"Succsesfuly": serializer.data})
+        else:
+            return Response(serializer.errors)
+
+
+class ExamGet(APIView):
+    queryset = ThemeExam.objects.all()
+    serializer = CreateExam()
+
+    def get(self, request, theme):
+        exam_title = ThemeExam.objects.filter(theme=theme).first()
+        all_exam = Exam.objects.filter(theme=exam_title).first()
+        serializer = ShowExam(all_exam)
+        if serializer.is_valid():
+            return Response(serializer)
+        else:
+            return Response(serializer.errors)
